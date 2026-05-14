@@ -1,0 +1,38 @@
+name: Monitor UNAM Derecho
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener código del repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Correr monitor
+        run: python monitor.py
+
+      - name: Guardar snapshot actualizado
+        run: |
+          git config user.name "Monitor Bot"
+          git config user.email "monitor@github.com"
+          git add diplomados_snapshot.txt
+          git diff --staged --quiet || git commit -m "snapshot: $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
